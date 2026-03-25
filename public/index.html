@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赵四娘茶肆</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- 顶部茶肆招牌 -->
+    <header class="teahouse-header">
+      <div class="header-inner">
+        <div class="signboard">
+          <span class="signboard-zh">东角楼茶肆</span>
+        </div>
+        <div class="header-info">
+          <span class="character-name">赵四娘</span>
+          <span class="character-status">
+            <span class="status-dot"></span>在店
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 聊天区域 -->
+    <main class="chat-area" id="chat-area">
+      <!-- 开场白 -->
+      <div class="message-row bot-row">
+        <div class="avatar">四</div>
+        <div class="bubble bot-bubble">
+          坐吧，凳子不咬人。今早的桂花茶刚泡好，喝口再说。
+        </div>
+      </div>
+    </main>
+
+    <!-- 输入区 -->
+    <footer class="input-area">
+      <div class="input-inner">
+        <textarea
+          id="user-input"
+          class="user-input"
+          placeholder="说点什么……"
+          rows="1"
+          maxlength="500"
+        ></textarea>
+        <button id="send-btn" class="send-btn" title="发送">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
