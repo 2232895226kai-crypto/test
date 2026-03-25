@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>京桂·九月初三夜</title>
+  <style>
+    /* ── 全局基础 ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c8a84b;
+      --gold-light:  #e8cc80;
+      --gold-dim:    #8a6e30;
+      --ink:         #0d0b07;
+      --ink-deep:    #07060400;
+      --paper:       #111008;
+      --card-bg:     rgba(255,245,210,0.04);
+      --card-border: rgba(200,168,75,0.25);
+      --text-body:   rgba(230,210,160,0.88);
+      --text-muted:  rgba(200,168,75,0.55);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--ink);
+      color: var(--text-body);
+      font-family: 'Noto Serif SC', 'Source Han Serif CN', 'STSong', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.9;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── 背景粒子 / 星尘 ── */
+    #stars-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+    }
+
+    /* ── 页面容器 ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ── 顶部装饰线 ── */
+    .top-ornament {
+      text-align: center;
+      padding-top: 56px;
+      letter-spacing: 0.4em;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .top-ornament span { display: inline-block; margin: 0 8px; }
+
+    /* ── 标题区 ── */
+    .hero {
+      text-align: center;
+      padding: 36px 0 28px;
+    }
+    .hero-subtitle {
+      font-size: 0.8rem;
+      letter-spacing: 0.35em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .hero-title {
+      font-size: clamp(2rem, 7vw, 3rem);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 32px rgba(200,168,75,0.45), 0 2px 6px rgba(0,0,0,0.8);
+      line-height: 1.3;
+    }
+    .hero-en {
+      margin-top: 12px;
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--gold-dim);
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+    }
+
+    /* ── 音频播放器 ── */
+    .audio-section {
+      margin: 10px 0 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .audio-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
+      color: var(--text-muted);
+    }
+    .audio-player-wrap {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 48px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      backdrop-filter: blur(6px);
+    }
+    .btn-play {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 14px rgba(200,168,75,0.35);
+    }
+    .btn-play:hover { transform: scale(1.08); box-shadow: 0 0 22px rgba(200,168,75,0.55); }
+    .btn-play svg { fill: #0d0b07; width: 18px; height: 18px; }
+    .btn-play.playing svg.icon-play { display: none; }
+    .btn-play:not(.playing) svg.icon-pause { display: none; }
+
+    .progress-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .progress-track {
+      width: 100%;
+      height: 3px;
+      background: rgba(200,168,75,0.2);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, var(--gold-dim), var(--gold));
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s linear;
+      pointer-events: none;
+    }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── 正文故事 ── */
+    .story-section { margin-bottom: 52px; }
+    .section-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.4em;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--gold-dim), transparent);
+    }
+
+    .story-para {
+      margin-bottom: 1.6em;
+      text-indent: 2em;
+      font-size: clamp(0.92rem, 2.4vw, 1.05rem);
+      color: var(--text-body);
+      /* 淡入动画初始态 */
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
+    }
+    .story-para.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .story-para:nth-child(2) { transition-delay: 0.05s; }
+    .story-para:nth-child(3) { transition-delay: 0.10s; }
+    .story-para:nth-child(4) { transition-delay: 0.15s; }
+    .story-para:nth-child(5) { transition-delay: 0.20s; }
+    .story-para:nth-child(6) { transition-delay: 0.25s; }
+    .story-para:nth-child(7) { transition-delay: 0.30s; }
+
+    /* ── 香型档案卡 ── */
+    .fragrance-section { margin-bottom: 60px; }
+    .frag-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 28px 26px;
+      backdrop-filter: blur(8px);
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .frag-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .frag-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+    .frag-card-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.55em;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .frag-notes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .note-item {
+      text-align: center;
+      padding: 18px 10px;
+      border: 1px solid rgba(200,168,75,0.15);
+      border-radius: 8px;
+      transition: border-color 0.3s;
+    }
+    .note-item:hover { border-color: var(--card-border); }
+    .note-badge {
+      font-size: 0.62rem;
+      letter-spacing: 0.25em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .note-icon { font-size: 1.6rem; margin-bottom: 8px; line-height: 1; }
+    .note-name {
+      font-size: 0.95rem;
+      color: var(--gold-light);
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+    .note-desc {
+      margin-top: 8px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── 诗句引用 ── */
+    .poem-quote {
+      text-align: center;
+      margin: 44px 0;
+      padding: 28px 20px;
+      position: relative;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .poem-quote.visible { opacity: 1; transform: translateY(0); }
+    .poem-quote::before, .poem-quote::after {
+      content: '';
+      display: block;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+      margin: 0 40px;
+    }
+    .poem-text {
+      font-size: clamp(1.05rem, 3vw, 1.25rem);
+      color: var(--gold-light);
+      letter-spacing: 0.2em;
+      padding: 20px 0;
+      line-height: 2;
+    }
+    .poem-source {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.25em;
+    }
+
+    /* ── 底部 ── */
+    .footer {
+      text-align: center;
+      padding: 32px 0 16px;
+      font-size: 0.68rem;
+      color: rgba(200,168,75,0.3);
+      letter-spacing: 0.3em;
+      line-height: 2;
+    }
+
+    /* ── 移动端微调 ── */
+    @media (max-width: 420px) {
+      .frag-notes { grid-template-columns: 1fr; gap: 12px; }
+      .note-item { padding: 14px 8px; }
+      .hero-title { letter-spacing: 0.06em; }
+    }
+  </style>
+  <!-- Google Fonts（可选，离线时自动降级） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- 星空背景 -->
+<canvas id="stars-canvas"></canvas>
+
+<div class="page-wrap">
+
+  <!-- 顶部装饰 -->
+  <div class="top-ornament">
+    <span>✦</span> 沉浸式香氛故事 <span>✦</span>
+  </div>
+
+  <!-- 标题 -->
+  <header class="hero">
+    <p class="hero-subtitle">JINGUI · PERFUME STORY</p>
+    <h1 class="hero-title">京桂·九月初三夜</h1>
+    <p class="hero-en">The Night of September Third · An Osmanthus Reverie</p>
+    <div class="divider">金桂飘香　暮秋入梦</div>
+  </header>
+
+  <!-- 音频播放器 -->
+  <section class="audio-section">
+    <p class="audio-label">✦ 聆听故事 ✦</p>
+    <div class="audio-player-wrap">
+      <button class="btn-play" id="btnPlay" aria-label="播放/暂停">
+        <!-- 播放图标 -->
+        <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <!-- 暂停图标 -->
+        <svg class="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+      </button>
+      <div class="progress-wrap">
+        <div class="progress-track" id="progressTrack">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="time-row">
+          <span id="timeCurrent">0:00</span>
+          <span id="timeDuration">--:--</span>
+        </div>
+      </div>
+    </div>
+    <audio id="storyAudio" preload="metadata">
+      <source src="story.mp3" type="audio/mpeg">
+    </audio>
+  </section>
+
+  <!-- 正文故事 -->
+  <section class="story-section">
+    <div class="section-label">故事正文</div>
+
+    <p class="story-para">
+      九月初三，暮色将桂树染成了一幅水墨。赵四娘的茶铺坐落在京城西角坊，门楣低矮，却因门前那棵百年金桂，年年引得行人驻足。她幼时随祖母习茶，知道桂花不是配角——桂花是时间的香气，浓得化不开，淡了便是一生。
+    </p>
+
+    <p class="story-para">
+      那天傍晚，一位客人推门而入，青衫微旧，手里捏着一封未拆的信。他说：「要一盏桂花茶，越浓越好。」赵四娘没有多问。她从陶罐里取出晒得半干的金桂，用石磨轻研，混入今年头茶的白毫银针，注以八十度的山泉——水温再高，茶便碎了心。
+    </p>
+
+    <p class="story-para">
+      茶汤入盏，金黄微透，桂香先是一缕青涩的露水气，像清晨摘花时手指沾上的寒意；随后次第展开，是熟透的金桂本味，有蜜，有粉，有一点微微的苦意，像说出口的思念总带着遗憾。客人捧着盏，闭目许久，才将那封信折好，揣回了袖中。
+    </p>
+
+    <p class="story-para">
+      赵四娘坐在灶后，听着门外桂树被秋风拂动的声音。她不知道那信里写的是什么，但她知道这香气。祖母说过：桂花茶里藏着一种记忆的能力，喝下去，你以为忘了的事会悄悄还回来，像从箱底翻出的旧物，带着樟木和时间的气息。
+    </p>
+
+    <p class="story-para">
+      夜深了，客人起身告辞，在门槛处停了停，低声说：「这茶，比我记忆里的更好。」赵四娘笑而不答。她知道，不是茶变了，是那个人终于肯与记忆和解了。她将残余的桂花末收好，明日还能泡一盏。
+    </p>
+
+    <p class="story-para">
+      月上中天，桂香浮在整条坊巷。京城的秋夜总是这样——短暂，安静，金色的，让人舍不得入睡。赵四娘吹灭茶炉，在门外站了一会儿，任桂香落满肩头。她想，若能把这一刻装进一只小瓶里，每逢迷途，便打开嗅一嗅——那气味会告诉你：你曾在某个九月初三夜，好好地活着，而且记得。
+    </p>
+  </section>
+
+  <!-- 诗句引用 -->
+  <div class="poem-quote">
+    <div class="poem-text">
+      可怜九月初三夜<br>露似真珠月似弓
+    </div>
+    <div class="poem-source">— 白居易《暮江吟》</div>
+  </div>
+
+  <!-- 香型档案 -->
+  <section class="fragrance-section">
+    <div class="section-label">香型档案</div>
+    <div class="frag-card">
+      <p class="frag-card-title">✦ FRAGRANCE PROFILE ✦</p>
+      <div class="frag-notes">
+
+        <div class="note-item">
+          <div class="note-badge">前 调</div>
+          <div class="note-icon">🍋</div>
+          <div class="note-name">青柚<br>露水</div>
+          <div class="note-desc">清晨采摘时<br>指尖的寒意<br>柑橘与生草</div>
+        </div>
+
+        <div class="note-item">
+          <div class="note-badge">中 调</div>
+          <div class="note-icon">🌸</div>
+          <div class="note-name">金桂<br>点茶</div>
+          <div class="note-desc">蜜甜熟花香<br>白茶烟火气<br>时间的重量</div>
+        </div>
+
+        <div class="note-item">
+          <div class="note-badge">后 调</div>
+          <div class="note-icon">🪵</div>
+          <div class="note-name">檀木<br>暖麝</div>
+          <div class="note-desc">沉木余温感<br>麝香轻漫延<br>记忆的底色</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>京桂 · JINGUI</p>
+    <p>九月初三夜　金桂飘香　一盏茶的距离</p>
+  </footer>
+
+</div><!-- end .page-wrap -->
+
+<script>
+/* ── 星空粒子 ── */
+(function () {
+  const canvas = document.getElementById('stars-canvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function initStars() {
+    stars = [];
+    const count = Math.floor((canvas.width * canvas.height) / 6000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.2 + 0.2,
+        alpha: Math.random() * 0.6 + 0.1,
+        speed: Math.random() * 0.004 + 0.001,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    t += 0.012;
+    stars.forEach(s => {
+      const a = s.alpha * (0.6 + 0.4 * Math.sin(t * s.speed * 200 + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232,204,128,${a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  initStars();
+  draw();
+  window.addEventListener('resize', () => { resize(); initStars(); });
+})();
+
+/* ── 音频播放器 ── */
+(function () {
+  const audio   = document.getElementById('storyAudio');
+  const btnPlay = document.getElementById('btnPlay');
+  const fill    = document.getElementById('progressFill');
+  const track   = document.getElementById('progressTrack');
+  const tCur    = document.getElementById('timeCurrent');
+  const tDur    = document.getElementById('timeDuration');
+
+  function fmt(s) {
+    if (!isFinite(s)) return '--:--';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return m + ':' + String(sec).padStart(2, '0');
+  }
+
+  audio.addEventListener('loadedmetadata', () => {
+    tDur.textContent = fmt(audio.duration);
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+    fill.style.width = pct + '%';
+    tCur.textContent = fmt(audio.currentTime);
+  });
+
+  audio.addEventListener('ended', () => {
+    btnPlay.classList.remove('playing');
+    fill.style.width = '0%';
+    tCur.textContent = '0:00';
+  });
+
+  btnPlay.addEventListener('click', () => {
+    if (audio.paused) {
+      audio.play().catch(() => {});
+      btnPlay.classList.add('playing');
+    } else {
+      audio.pause();
+      btnPlay.classList.remove('playing');
+    }
+  });
+
+  track.addEventListener('click', e => {
+    if (!audio.duration) return;
+    const rect = track.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    audio.currentTime = ratio * audio.duration;
+  });
+})();
+
+/* ── 滚动淡入动画 ── */
+(function () {
+  const targets = document.querySelectorAll('.story-para, .poem-quote, .frag-card');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  targets.forEach(el => observer.observe(el));
+})();
+</script>
+
+</body>
+</html>
